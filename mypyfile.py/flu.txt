@@ -1,0 +1,142 @@
+import re
+import tkinter as tk
+from tkinter import messagebox
+
+flu_infos = [
+    {
+        "流感种类": "甲型流感 / Influenza A",
+        "症状": "高热、畏寒、头痛、乏力、咳嗽、流涕、鼻塞、咽痛",
+        "症状_en": "fever, chills, headache, fatigue, cough, runny nose, nasal congestion, sore throat",
+        "常用药品": "奥司他韦 / Oseltamivir, 扎那米韦 / Zanamivir",
+        "剂量范围": "Oseltamivir: 75mg twice daily for 5 days\nZanamivir: 10mg inhaled twice daily for 5 days",
+        "注意事项": "儿童、孕妇、老年人慎用 / Caution for children, pregnant women, elderly",
+    },
+    {
+        "流感种类": "乙型流感 / Influenza B",
+        "症状": "高热、乏力、咳嗽、流涕、鼻塞、咽痛",
+        "症状_en": "fever, fatigue, cough, runny nose, nasal congestion, sore throat",
+        "常用药品": "奥司他韦 / Oseltamivir, 扎那米韦 / Zanamivir",
+        "剂量范围": "Oseltamivir: 75mg twice daily for 5 days\nZanamivir: 10mg inhaled twice daily for 5 days",
+        "注意事项": "注意不良反应 / Watch for side effects",
+    },
+    {
+        "流感种类": "丙型流感 / Influenza C",
+        "症状": "咳嗽、流涕、鼻塞、低热",
+        "症状_en": "cough, runny nose, nasal congestion, mild fever",
+        "常用药品": "对乙酰氨基酚 / Paracetamol (symptomatic)",
+        "剂量范围": "Paracetamol: 500–1000mg, 3–4 times/day",
+        "注意事项": "避免重复用药 / Avoid overdosing",
+    },
+    {
+        "流感种类": "风寒感冒",
+        "症状": "恶寒重、发热轻、无汗、头痛、肢体酸楚或疼痛，鼻塞声重、打喷嚏、时流清涕、咽痒、咳嗽、痰白稀薄，舌苔薄白，脉浮或浮紧",
+        "常用药品": "通宣理肺片（丸）、感冒清热颗粒",
+        "剂量范围": "丸剂成人每次服 2 丸，日服 2 次；片剂服 6 片，日服 3 次；感冒清热颗粒按说明书服用",
+        "注意事项": "儿童、孕妇、老年人及有基础疾病者用药需谨慎，应在医生指导下使用。使用药物时要仔细阅读说明书，注意不良反应和禁忌证",
+    },
+    {
+        "流感种类": "风热感冒",
+        "症状": "身热较著、微恶风、汗泄不畅、头胀痛，咽干甚则咽痛、鼻塞、流黄稠涕、咳嗽、痰黏或黄、口干欲饮，舌尖红，舌苔薄白干或薄黄，脉浮数",
+        "常用药品": "银翘解毒片、连花清瘟胶囊",
+        "剂量范围": "成人每次服 4 - 6 片，日服 2 次；连花清瘟胶囊口服一次 4 粒，一日 3 次",
+        "注意事项": "儿童、孕妇、老年人及有基础疾病者用药需谨慎，应在医生指导下使用。使用药物时要仔细阅读说明书，注意不良反应和禁忌证",
+    },
+    {
+        "流感种类": "暑湿感冒",
+        "症状": "发热、微恶风、身热不扬、汗出不畅、肢体困重或酸痛、头重如裹、胸闷脘痞、纳呆、心烦、大便或溏、小便短赤，鼻塞、流浊涕、口渴，舌苔白腻或黄腻，脉濡数或滑",
+        "常用药品": "藿香正气水、暑湿感冒颗粒",
+        "剂量范围": "成人一次 5 - 10 毫升，一日 2 次；暑湿感冒颗粒按说明书服用",
+        "注意事项": "儿童、孕妇、老年人及有基础疾病者用药需谨慎，应在医生指导下使用。使用药物时要仔细阅读说明书，注意不良反应和禁忌证",
+    },
+    {
+        "流感种类": "普通感冒",
+        "症状": "主要表现为鼻部症状，如喷嚏、鼻塞、流清水样鼻涕，也可表现为咳嗽、咽干、咽痒或烧灼感甚至鼻后滴漏感。随病情进展，鼻涕可变稠，可伴咽痛、头痛、流泪、味觉迟钝、呼吸不畅、声嘶等，有时可由于咽鼓管炎致听力减退。严重者有发热、轻度畏寒和头痛等",
+        "常用药品": "复方氨酚烷胺胶囊、氨酚伪麻美芬片",
+        "剂量范围": "成人一次 1 粒，一日 2 次；成人一次 1 - 2 片，一日 3 次",
+        "注意事项": "儿童、孕妇、老年人及有基础疾病者用药需谨慎，应在医生指导下使用。使用药物时要仔细阅读说明书，注意不良反应和禁忌证",
+    },
+    {
+        "流感种类": "流行性感冒",
+        "症状": "由流感病毒引起的急性呼吸道传染病，具有高度传染性。主要表现为高热、头痛、乏力、肌肉酸痛等症状，可伴或不伴有鼻塞、流涕、咽痛、咳嗽等症状",
+        "常用药品": "奥司他韦、连花清瘟胶囊",
+        "剂量范围": "成人每次 75mg，每日 2 次，疗程 5 天；连花清瘟胶囊口服一次 4 粒，一日 3 次",
+        "注意事项": "儿童、孕妇、老年人及有基础疾病者用药需谨慎，应在医生指导下使用。使用药物时要仔细阅读说明书，注意不良反应和禁忌证",
+    },
+    {
+        "流感种类": "细菌性感冒",
+        "症状": "鼻部症状：出现流浓稠的黄色或绿色鼻涕， 咳嗽咳痰：咳嗽症状持续，痰液通常为黄色、绿色或脓性。",
+        "常用药品": "阿莫西林、头孢克洛",
+        "剂量范围": "成人一般一次0.5g，每6 - 8小时1次，一日剂量不超过4g；儿童根据体重，每日每千克体重20 - 40mg，分3 - 4次服用。成人常用剂量一次0.25g，一日3次；严重感染患者剂量可加倍，但一日总量不超过4g。儿童按体重一日20 - 40mg/kg，分3次服用",
+        "注意事项": "服药期间：避免饮酒，因部分抗生素如头孢菌素类可与酒精发生双硫仑样反应，严重时危及生命；严格按规定剂量和疗程用药，不要自行增减剂量或提前停药，以确保彻底清除细菌，防止复发。",
+    },
+    {
+        "流感种类": "胃肠型感冒",
+        "症状": "以胃肠道症状为主，如频繁的恶心、呕吐、腹痛、腹泻，同时可伴有发热、头痛、乏力等感冒症状",
+        "常用药品": "甲氧氯普胺、双歧杆菌四联活菌片",
+        "剂量范围": "甲氧氯普胺，成人一次5 - 10mg，一日3次.双歧杆菌四联活菌片，成人一次3片，一日3次",
+        "注意事项": "患病期间饮食要清淡、易消化，避免食用辛辣、油腻、刺激性食物，以防加重胃肠道负担",
+    },
+]
+
+def search(symptom_input=None):
+    symptom = symptom_input or entry.get().strip().lower().replace("。", "").replace("，", "")
+    if not symptom:
+        messagebox.showwarning("提示 / Warning", "请输入病症关键词 / Please enter a symptom keyword.")
+        return
+    
+    entry.delete(0, tk.END)
+    entry.insert(0, symptom)
+
+    result_text.delete(1.0, tk.END)
+    found = False
+
+    for flu in flu_infos:
+        if re.search(symptom, flu["症状"]) or re.search(symptom, flu["症状_en"]):
+            found = True
+            result_text.insert(tk.END, f"🦠 流感种类 / Flu Type:\n{flu['流感种类']}\n\n")
+            result_text.insert(tk.END, f"💊 常用药品 / Medications:\n{flu['常用药品']}\n\n")
+            result_text.insert(tk.END, f"📋 剂量范围 / Dosage:\n{flu['剂量范围']}\n\n")
+            result_text.insert(tk.END, f"⚠️ 注意事项 / Notes:\n{flu['注意事项']}\n")
+            result_text.insert(tk.END, "-------------------------------------------\n\n")
+    
+    if not found:
+        result_text.insert(tk.END, "❌ 未找到匹配项 / No matching flu type found.\n")
+
+def clear_text():
+    entry.delete(0, tk.END)
+    result_text.delete(1.0, tk.END)
+
+root = tk.Tk()
+root.title("流感类型智能查询器 / Flu Type Finder")
+root.geometry("600x600")
+root.configure(bg="#f8f9fa")
+
+tk.Label(root, text="流感症状查询器", font=("Arial", 16, "bold"), bg="#f8f9fa", fg="#333").pack(pady=10)
+
+tk.Label(root, text="请输入病症关键词（支持中英文）：", font=("Arial", 12), bg="#f8f9fa").pack()
+entry = tk.Entry(root, width=40, font=("Arial", 12))
+entry.pack(pady=5)
+
+btn_frame = tk.Frame(root, bg="#f8f9fa")
+btn_frame.pack()
+tk.Button(btn_frame, text="查询 / Search", command=search, font=("Arial", 11), bg="#198754", fg="white", width=10).pack(side="left", padx=5)
+tk.Button(btn_frame, text="清除 / Clear", command=clear_text, font=("Arial", 11), bg="#dc3545", fg="white", width=10).pack(side="left", padx=5)
+
+frame_cn = tk.Frame(root, bg="#f8f9fa")
+frame_cn.pack(pady=5)
+tk.Label(frame_cn, text="常见症状（中文）:", bg="#f8f9fa", font=("Arial", 10, "bold")).pack(side="left")
+common_symptoms_cn = ["咳嗽", "头痛", "鼻塞", "咽痛", "高热"]
+for sym in common_symptoms_cn:
+    tk.Button(frame_cn, text=sym, command=lambda s=sym: search(s), font=("Arial", 10), bg="#dee2e6").pack(side="left", padx=2)
+
+frame_en = tk.Frame(root, bg="#f8f9fa")
+frame_en.pack(pady=5)
+tk.Label(frame_en, text="Common Symptoms (English):", bg="#f8f9fa", font=("Arial", 10, "bold")).pack(side="left")
+common_symptoms_en = ["cough", "headache", "sore throat", "fatigue", "runny nose"]
+for sym in common_symptoms_en:
+    tk.Button(frame_en, text=sym, command=lambda s=sym: search(s), font=("Arial", 10), bg="#dee2e6").pack(side="left", padx=2)
+
+result_text = tk.Text(root, width=70, height=20, font=("Arial", 10), wrap=tk.WORD)
+result_text.pack(pady=10)
+
+root.mainloop()
